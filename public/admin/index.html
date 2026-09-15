@@ -1,24 +1,55 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>LoansBazaar Admin</title><link rel="stylesheet" href="/admin/admin.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LoansBazaar Admin</title>
+  <link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body>
-  <div id="loginView" class="auth-wrap">
-    <div class="auth-card"><div class="brand">Loans<span>Bazaar</span></div><p class="eyebrow">PRIVATE ADMIN PORTAL</p><h1>Welcome back</h1><p class="muted">Sign in to manage website enquiries.</p>
-      <form id="loginForm"><label>User ID<input id="username" autocomplete="username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">Sign in</button><div id="loginError" class="error"></div></form>
-    </div>
-  </div>
-  <div id="app" class="hidden">
-    <header class="topbar"><div class="brand">Loans<span>Bazaar</span><small>ADMIN</small></div><div class="top-actions"><span id="adminUser"></span><button id="logoutBtn" class="ghost">Logout</button></div></header>
-    <main class="container">
-      <div class="heading"><div><p class="eyebrow">ADMIN DASHBOARD</p><h1>Enquiries</h1><p class="muted">View, search and manage all enquiries received from LoansBazaar.</p></div><a class="primary export" href="/api/admin/enquiries/export">Export CSV</a></div>
-      <section class="stats"><div><span>Total</span><strong id="total">0</strong></div><div><span>Today</span><strong id="today">0</strong></div><div><span>Customers</span><strong id="customers">0</strong></div><div><span>Partners</span><strong id="partners">0</strong></div></section>
-      <section class="panel filters"><input id="search" placeholder="Search name, mobile, email or service"><select id="type"><option value="">All types</option><option>Customer</option><option>Partner</option></select><select id="status"><option value="">All statuses</option><option>New</option><option>Contacted</option><option>In Progress</option><option>Closed</option></select><button id="refresh" class="secondary">Refresh</button></section>
-      <section class="panel table-wrap"><div class="table-head"><strong>Latest enquiries</strong><span id="countLabel" class="muted"></span></div><div class="scroll"><table><thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Customer</th><th>Contact</th><th>Service</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div><div id="empty" class="empty hidden">No enquiries found.</div></section>
-    </main>
-  </div>
-  <div id="drawer" class="drawer hidden"><div class="drawer-backdrop" id="drawerClose"></div><aside><button class="close" id="closeBtn">×</button><p class="eyebrow">ENQUIRY DETAILS</p><h2 id="detailName"></h2><div id="detailBody"></div><label>Status<select id="detailStatus"><option>New</option><option>Contacted</option><option>In Progress</option><option>Closed</option></select></label><label>Admin notes<textarea id="detailNotes" rows="4" placeholder="Add notes..."></textarea></label><div class="drawer-actions"><button id="saveBtn" class="primary">Save</button><button id="deleteBtn" class="danger">Delete enquiry</button></div><div id="saveMsg" class="muted"></div></aside></div>
+  <main class="shell">
+    <section id="loginCard" class="card login-card">
+      <div class="brand">LoansBazaar</div>
+      <h1>Admin Login</h1>
+      <p>Secure enquiry dashboard</p>
+      <form id="loginForm">
+        <label>User ID<input id="username" autocomplete="username" required></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Login</button>
+        <div id="loginError" class="error"></div>
+      </form>
+    </section>
+
+    <section id="dashboard" hidden>
+      <header class="topbar">
+        <div><div class="brand">LoansBazaar</div><h1>Enquiry Dashboard</h1></div>
+        <button id="logout" class="secondary">Logout</button>
+      </header>
+
+      <div class="stats">
+        <div class="stat"><span>Total</span><strong id="total">0</strong></div>
+        <div class="stat"><span>Customers</span><strong id="customers">0</strong></div>
+        <div class="stat"><span>Partners</span><strong id="partners">0</strong></div>
+        <div class="stat"><span>Today</span><strong id="today">0</strong></div>
+      </div>
+
+      <section class="card">
+        <div class="toolbar">
+          <input id="search" placeholder="Search name, mobile, email or service…">
+          <select id="typeFilter"><option value="">All types</option><option>Customer</option><option>Partner</option></select>
+          <button id="refresh">Refresh</button>
+          <button id="export" class="secondary">Export CSV</button>
+        </div>
+        <div id="status" class="status"></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Service</th><th>Name</th><th>Age</th><th>Mobile</th><th>Email</th><th>Message</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
   <script src="/admin/admin.js"></script>
-</body></html>
+</body>
+</html>
