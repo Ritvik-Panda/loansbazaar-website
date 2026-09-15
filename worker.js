@@ -16,6 +16,13 @@ export default {
     }
     if (!isAdminHost && url.pathname.startsWith("/admin")) return new Response("Not Found", { status: 404 });
 
+    // Main website root: explicitly serve public/index.html.
+    // This is required because html_handling = "none" disables automatic
+    // extensionless HTML routing for the static asset root.
+    if (!isAdminHost && (url.pathname === "/" || url.pathname === "")) {
+      return env.ASSETS.fetch(new Request(new URL("/index.html", request.url), request));
+    }
+
     return env.ASSETS.fetch(request);
   }
 };
