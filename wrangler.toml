@@ -12,3 +12,6 @@ html_handling = "none"
 binding = "LOANSBAZAAR_DB"
 database_name = "loansbazaar-db"
 database_id = "e8049730-c319-4045-ad37-f4910302e716"
+
+[secrets]
+required = ["ADMIN_PIN"]
