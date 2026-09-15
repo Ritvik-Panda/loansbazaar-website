@@ -114,3 +114,20 @@ textarea{resize:vertical}.service-selected-label input{background:#eef7fc;color:
   .section{padding:70px 0}.section-heading h2,.why h2{font-size:34px}.service-grid{grid-template-columns:1fr}.service-card{min-height:210px}.why-grid{grid-template-columns:1fr}.cta-box{padding:38px 28px;display:block}.cta h2{font-size:31px}.white-btn{margin-top:15px}.footer-grid{grid-template-columns:1fr;gap:30px}.footer-bottom{display:block}.footer-bottom span{display:block;margin:8px 0}
   .modal-panel{padding:28px 20px}.form-grid{grid-template-columns:1fr}.modal-panel h2{font-size:26px}
 }
+
+/* LoansBazaar branding, owner and contact updates */
+.brand-logo{width:48px;height:48px;object-fit:contain;border-radius:10px;background:#fff;box-shadow:0 5px 16px rgba(16,42,67,.10)}
+.footer-brand .brand-logo{width:54px;height:54px}
+.hero-visual{position:relative;min-height:420px;display:grid;place-items:center}
+.hero-image{width:min(520px,100%);height:430px;object-fit:cover;border-radius:28px;box-shadow:0 30px 70px rgba(16,42,67,.25);border:1px solid rgba(255,255,255,.8)}
+.about{background:var(--bg)}
+.about-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:80px;align-items:center}
+.owner-card{background:white;border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
+.owner-photo-wrap{height:390px;overflow:hidden;background:#eef4f8}
+.owner-photo{width:100%;height:100%;object-fit:cover;object-position:center 28%}
+.owner-info{padding:24px 26px 27px}.owner-info .eyebrow{margin-bottom:8px}.owner-info h3{font-family:Manrope;font-size:25px;color:var(--navy);margin:0 0 6px}.owner-info p{font-size:13px;color:var(--muted);margin:0;line-height:1.7}
+.contact-mini{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:30px}.contact-mini>a,.contact-mini>div{display:flex;gap:12px;align-items:flex-start;padding:15px;border:1px solid var(--line);border-radius:14px;background:white;text-decoration:none;color:inherit}.contact-mini>a:hover{border-color:#9fcde2;transform:translateY(-2px)}.contact-mini>div:last-child{grid-column:1/-1}.contact-mini>span,.contact-mini a>span,.contact-mini div>span{font-size:20px}.contact-mini b{display:block;font-size:12px;color:var(--navy);line-height:1.4}.contact-mini small{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.gallery{background:#fff}.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.gallery-grid img{width:100%;height:300px;object-fit:cover;border-radius:20px;box-shadow:0 14px 35px rgba(16,42,67,.12);transition:.25s}.gallery-grid img:hover{transform:translateY(-5px)}
+.footer-grid a{color:#aebdca}.footer-grid a:hover{color:white}
+@media(max-width:950px){.about-grid{gap:40px}.contact-mini{grid-template-columns:1fr}.contact-mini>div:last-child{grid-column:auto}.gallery-grid{grid-template-columns:1fr 1fr}.gallery-grid img{height:260px}.hero-image{height:380px}}
+@media(max-width:700px){.hero-visual{min-height:330px}.hero-image{height:330px;border-radius:22px}.about-grid{grid-template-columns:1fr}.owner-photo-wrap{height:360px}.gallery-grid{grid-template-columns:1fr}.gallery-grid img{height:260px}.brand-logo{width:42px;height:42px}}
