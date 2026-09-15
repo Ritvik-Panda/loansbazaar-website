@@ -4,64 +4,103 @@ export async function onRequestPost(context) {
 
     const required = ["name", "age", "mobile", "email", "type"];
     for (const key of required) {
-      if (!data[key]) {
+      if (!String(data[key] ?? "").trim()) {
         return json({ ok: false, error: `Missing ${key}` }, 400);
       }
     }
 
-    // Configure these in Cloudflare Pages:
-    // RESEND_API_KEY = your Resend API key
-    // NOTIFY_EMAIL   = email where your LoansBazaar team should receive enquiries
-    // FROM_EMAIL     = a verified sender, e.g. enquiries@yourdomain.com
+    const name = clean(data.name, 120);
+    const age = Number(data.age);
+    const mobile = clean(data.mobile, 30);
+    const email = clean(data.email, 160);
+    const type = clean(data.type, 30);
+    const service = clean(data.service || "General Enquiry", 80);
+    const message = clean(data.message || "", 2000);
+
+    if (!name || !Number.isInteger(age) || age < 18 || age > 100) {
+      return json({ ok: false, error: "Please enter valid details." }, 400);
+    }
+    if (!/^\+?[0-9\s-]{10,20}$/.test(mobile)) {
+      return json({ ok: false, error: "Please enter a valid mobile number." }, 400);
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return json({ ok: false, error: "Please enter a valid email address." }, 400);
+    }
+    if (!['Customer', 'Partner'].includes(type)) {
+      return json({ ok: false, error: "Invalid enquiry type." }, 400);
+    }
+
+    // Required Cloudflare D1 binding: LOANSBAZAAR_DB
+    // Create the table with functions/schema.sql before going live.
+    const db = context.env.LOANSBAZAAR_DB;
+    if (!db) {
+      console.error("Missing LOANSBAZAAR_DB binding.");
+      return json({ ok: false, error: "Backend database is not configured." }, 500);
+    }
+
+    const saved = await db.prepare(`
+      INSERT INTO enquiries (type, service, name, age, mobile, email, message)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(type, service, name, age, mobile, email, message).run();
+
+    if (!saved.success) {
+      console.error("D1 save failed:", saved);
+      return json({ ok: false, error: "Could not save the enquiry." }, 500);
+    }
+
+    // Optional email notification. The enquiry remains safely saved in D1
+    // even if the email provider is temporarily unavailable.
     const { RESEND_API_KEY, NOTIFY_EMAIL, FROM_EMAIL } = context.env;
+    let emailSent = false;
 
-    if (!RESEND_API_KEY || !NOTIFY_EMAIL || !FROM_EMAIL) {
-      console.error("Missing email environment variables.");
-      return json({ ok: false, error: "Server email configuration is incomplete." }, 500);
+    if (RESEND_API_KEY && NOTIFY_EMAIL && FROM_EMAIL) {
+      const subject = type === "Partner"
+        ? `New LoansBazaar Partner Enquiry - ${name}`
+        : `New LoansBazaar Customer Enquiry - ${service}`;
+
+      const html = `
+        <h2>New LoansBazaar Enquiry</h2>
+        <table cellpadding="8" cellspacing="0" border="1" style="border-collapse:collapse">
+          <tr><td><b>Type</b></td><td>${escapeHtml(type)}</td></tr>
+          <tr><td><b>Service</b></td><td>${escapeHtml(service)}</td></tr>
+          <tr><td><b>Name</b></td><td>${escapeHtml(name)}</td></tr>
+          <tr><td><b>Age</b></td><td>${escapeHtml(age)}</td></tr>
+          <tr><td><b>Mobile</b></td><td>${escapeHtml(mobile)}</td></tr>
+          <tr><td><b>Email</b></td><td>${escapeHtml(email)}</td></tr>
+          <tr><td><b>Message</b></td><td>${escapeHtml(message || "-")}</td></tr>
+        </table>
+      `;
+
+      try {
+        const mail = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            from: FROM_EMAIL,
+            to: [NOTIFY_EMAIL],
+            subject,
+            html
+          })
+        });
+        emailSent = mail.ok;
+        if (!mail.ok) console.error("Resend error:", await mail.text());
+      } catch (mailError) {
+        console.error("Email notification failed:", mailError);
+      }
     }
 
-    const subject = data.type === "Partner"
-      ? `New LoansBazaar Partner Enquiry - ${data.name}`
-      : `New LoansBazaar Customer Enquiry - ${data.service || "General"}`;
-
-    const html = `
-      <h2>New LoansBazaar Enquiry</h2>
-      <table cellpadding="8" cellspacing="0" border="1" style="border-collapse:collapse">
-        <tr><td><b>Type</b></td><td>${escapeHtml(data.type)}</td></tr>
-        <tr><td><b>Service</b></td><td>${escapeHtml(data.service || "General Enquiry")}</td></tr>
-        <tr><td><b>Name</b></td><td>${escapeHtml(data.name)}</td></tr>
-        <tr><td><b>Age</b></td><td>${escapeHtml(data.age)}</td></tr>
-        <tr><td><b>Mobile</b></td><td>${escapeHtml(data.mobile)}</td></tr>
-        <tr><td><b>Email</b></td><td>${escapeHtml(data.email)}</td></tr>
-        <tr><td><b>Message</b></td><td>${escapeHtml(data.message || "-")}</td></tr>
-      </table>
-    `;
-
-    const mail = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [NOTIFY_EMAIL],
-        subject,
-        html
-      })
-    });
-
-    if (!mail.ok) {
-      const errorText = await mail.text();
-      console.error("Resend error:", errorText);
-      return json({ ok: false, error: "Email provider rejected the request." }, 502);
-    }
-
-    return json({ ok: true });
+    return json({ ok: true, saved: true, emailSent });
   } catch (error) {
     console.error(error);
     return json({ ok: false, error: "Unexpected server error." }, 500);
   }
+}
+
+function clean(value, maxLength) {
+  return String(value ?? "").trim().slice(0, maxLength);
 }
 
 function escapeHtml(value) {
@@ -76,6 +115,9 @@ function escapeHtml(value) {
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" }
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store"
+    }
   });
 }

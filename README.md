@@ -1,6 +1,6 @@
 # LoansBazaar Website
 
-A professional, responsive LoansBazaar landing website with:
+Professional, responsive LoansBazaar lead/enquiry website with:
 
 - Personal Loan
 - Home Loan
@@ -9,43 +9,55 @@ A professional, responsive LoansBazaar landing website with:
 - Life Insurance
 - Customer flow → choose service → enquiry form
 - Partner flow → partner enquiry form
-- Cloudflare Pages Function for enquiry email notifications
+- **Cloudflare D1 backend storage for every enquiry**
+- Optional Resend email notifications
+- Registered Trademark certificate section
 - Mobile responsive design
 
-## Deploy on Cloudflare Pages
+## Cloudflare Pages + D1 setup
 
-1. Upload this folder to a GitHub repository, or upload the project through Cloudflare Pages.
-2. Create a Cloudflare Pages project and connect the repository.
-3. Use:
-   - Build command: none
-   - Build output directory: `/`
-4. The `/functions` folder is automatically used by Cloudflare Pages Functions.
+1. Create a Cloudflare Pages project for this folder.
+2. Keep the build command empty and use the project root as the output directory.
+3. Create a **D1 database** in Cloudflare.
+4. In the Pages project, add a D1 binding named exactly:
+   - `LOANSBAZAAR_DB`
+5. Run the SQL in `functions/schema.sql` against that D1 database.
+6. Redeploy the Pages project.
 
-## Make enquiries reach your team
+The form endpoint `/api/submit` now saves the enquiry to D1 before attempting email notification. This means a temporary email failure does **not** lose the submitted lead.
 
-The included function uses Resend for email delivery.
+## Optional email notifications
 
-Create these Cloudflare Pages environment variables:
+Add these Cloudflare Pages environment variables:
 
 - `RESEND_API_KEY` = your Resend API key
-- `NOTIFY_EMAIL` = the email address where LoansBazaar enquiries should arrive
+- `NOTIFY_EMAIL` = the email address where enquiries should arrive
 - `FROM_EMAIL` = a verified sender address on your domain
 
-Example:
-- FROM_EMAIL: `enquiries@loansbazaar.in`
-- NOTIFY_EMAIL: `yourteam@example.com`
+If these variables are not configured, enquiries are still saved to D1.
 
-After adding the variables, redeploy the site.
+## Where the data is stored
 
-## Before going live
+All submitted customer and partner enquiries are stored in the D1 `enquiries` table with:
 
-Replace these placeholders in `index.html`:
+- enquiry type
+- selected service
+- name
+- age
+- mobile
+- email
+- message/requirement
+- submission date/time
 
-- `+91 XXXXX XXXXX`
-- `hello@loansbazaar.in`
-- `India`
+You can view/export the saved records from the Cloudflare D1 dashboard.
 
-Also replace the text-only logo with your real LoansBazaar logo if you have one.
+## Trademark
+
+The supplied LoansBazaar registered trademark certificate image is included at:
+
+`assets/loansbazaar-trademark-certificate.jpeg`
+
+It is displayed in a dedicated Registered Trademark section on the website and can be opened full-size.
 
 ## Important
 

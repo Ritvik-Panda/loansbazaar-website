@@ -87,7 +87,10 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify(payload)
     });
 
-    if (!response.ok) throw new Error("Submission failed");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok || result.saved !== true) {
+      throw new Error(result.error || "Submission failed");
+    }
 
     form.style.display = "none";
     successBox.hidden = false;
