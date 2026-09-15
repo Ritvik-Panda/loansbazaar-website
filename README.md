@@ -1,69 +1,43 @@
 # LoansBazaar Website
 
-Professional, responsive LoansBazaar lead/enquiry website with:
-
-- Personal Loan
-- Home Loan
-- Business Loan
-- Health Insurance
-- Life Insurance
-- Customer flow → choose service → enquiry form
-- Partner flow → partner enquiry form
-- **Cloudflare D1 backend storage for every enquiry**
+Cloudflare Workers website with:
+- Responsive LoansBazaar website
+- Customer and Partner enquiry forms
+- Cloudflare D1 storage for every enquiry
 - Optional Resend email notifications
 - Registered Trademark certificate section
-- Mobile responsive design
 
-## Cloudflare Pages + D1 setup
+## Cloudflare Workers setup
 
-This package already includes `wrangler.toml` with the D1 binding configuration for the existing `loansbazaar-db` database. The binding is named exactly `LOANSBAZAAR_DB`, matching the backend code.
+This repository is configured for **Cloudflare Workers Builds**, not the older Pages Functions layout.
 
-1. Upload/push the files in this package to the root of the GitHub repository connected to your Cloudflare Pages project.
-2. Keep the build command empty and use the project root as the output directory.
-3. The included `wrangler.toml` configures the D1 binding automatically:
-   - Binding: `LOANSBAZAAR_DB`
-   - Database: `loansbazaar-db`
-   - Database ID: `e8049730-c319-4045-ad37-f4910302e716`
-4. Run the SQL in `functions/schema.sql` against that D1 database if it has not already been run. (It has already been created for this project.)
-5. Deploy/redeploy the Pages project so the binding takes effect.
+### D1 binding
+The Wrangler configuration already declares the production D1 binding:
 
-Cloudflare supports configuring Pages D1 bindings through Wrangler as an alternative to the dashboard binding UI.
+- Binding: `LOANSBAZAAR_DB`
+- Database: `loansbazaar-db`
 
-The form endpoint `/api/submit` now saves the enquiry to D1 before attempting email notification. This means a temporary email failure does **not** lose the submitted lead.
+The binding name uses an underscore and must not be changed to `LOANSBAZAAR-DB`.
 
-## Optional email notifications
+### D1 schema
+Run the SQL in `schema.sql` once against the `loansbazaar-db` database. It creates the `enquiries` table and indexes.
 
-Add these Cloudflare Pages environment variables:
+### Optional email notifications
+Create these Worker secrets/variables if email notifications are required:
 
-- `RESEND_API_KEY` = your Resend API key
-- `NOTIFY_EMAIL` = the email address where enquiries should arrive
-- `FROM_EMAIL` = a verified sender address on your domain
+- `RESEND_API_KEY`
+- `NOTIFY_EMAIL`
+- `FROM_EMAIL`
 
-If these variables are not configured, enquiries are still saved to D1.
+The enquiry is saved to D1 before email is attempted. Therefore a temporary email failure does not lose the enquiry.
 
-## Where the data is stored
+## Workers Build settings
 
-All submitted customer and partner enquiries are stored in the D1 `enquiries` table with:
+For the Git-connected Cloudflare Worker:
 
-- enquiry type
-- selected service
-- name
-- age
-- mobile
-- email
-- message/requirement
-- submission date/time
+- Build command: leave empty
+- Deploy command: `npx wrangler deploy`
+- Root directory: `/`
+- Production branch: `main`
 
-You can view/export the saved records from the Cloudflare D1 dashboard.
-
-## Trademark
-
-The supplied LoansBazaar registered trademark certificate image is included at:
-
-`assets/loansbazaar-trademark-certificate.jpeg`
-
-It is displayed in a dedicated Registered Trademark section on the website and can be opened full-size.
-
-## Important
-
-This is a lead/enquiry website, not a loan approval engine. Avoid promising guaranteed approval, guaranteed interest rates, or guaranteed insurance coverage. Add your actual company, distributor/intermediary, regulatory and privacy details before publishing.
+The `wrangler.toml` file is intentionally configured for Workers static assets and D1.

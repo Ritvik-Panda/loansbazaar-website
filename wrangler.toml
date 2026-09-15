@@ -1,6 +1,11 @@
 name = "loansbazaar-website"
-pages_build_output_dir = "."
+main = "worker.js"
 compatibility_date = "2026-09-15"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
 
 [[d1_databases]]
 binding = "LOANSBAZAAR_DB"
