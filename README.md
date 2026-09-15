@@ -10,3 +10,7 @@ Cloudflare Worker serving the public LoansBazaar website on `loansbazaar.co.in` 
 - Optional email variables: `RESEND_API_KEY`, `NOTIFY_EMAIL`, `FROM_EMAIL`
 
 The admin dashboard reads enquiries from D1 and supports search, type filtering, refresh, statistics and CSV export.
+
+
+## Domain routing
+`assets.run_worker_first = true` is required because the Worker selects the public or admin site based on hostname. `loansbazaar.co.in` serves the public site, while `admin.loansbazaar.co.in` serves `public/admin/index.html`.
