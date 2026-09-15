@@ -41,3 +41,19 @@ For the Git-connected Cloudflare Worker:
 - Production branch: `main`
 
 The `wrangler.toml` file is intentionally configured for Workers static assets and D1.
+
+## Admin dashboard
+
+The same Worker serves the private admin portal at `https://admin.loansbazaar.co.in` once that hostname is attached to this Worker.
+
+### Required Cloudflare secrets
+Create these under the Worker environment:
+- `ADMIN_USER` = `Admin`
+- `ADMIN_PASSWORD` = the admin password chosen by the owner
+- `ADMIN_SESSION_SECRET` = a long random secret (at least 32 characters)
+
+Do not put these values in GitHub. The password is intentionally read from a Cloudflare Secret.
+
+The admin portal provides login, enquiry search/filtering, customer/partner totals, today count, enquiry status + notes, CSV export, click-to-call/email, and deletion.
+
+On the first authenticated admin request, the Worker creates the `enquiry_admin_meta` table in D1 for status and notes. Existing `enquiries` data is preserved.
