@@ -1,0 +1,8 @@
+name = "loansbazaar-website"
+pages_build_output_dir = "."
+compatibility_date = "2026-09-15"
+
+[[d1_databases]]
+binding = "LOANSBAZAAR_DB"
+database_name = "loansbazaar-db"
+database_id = "e8049730-c319-4045-ad37-f4910302e716"

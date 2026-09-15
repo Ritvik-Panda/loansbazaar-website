@@ -16,13 +16,18 @@ Professional, responsive LoansBazaar lead/enquiry website with:
 
 ## Cloudflare Pages + D1 setup
 
-1. Create a Cloudflare Pages project for this folder.
+This package already includes `wrangler.toml` with the D1 binding configuration for the existing `loansbazaar-db` database. The binding is named exactly `LOANSBAZAAR_DB`, matching the backend code.
+
+1. Upload/push the files in this package to the root of the GitHub repository connected to your Cloudflare Pages project.
 2. Keep the build command empty and use the project root as the output directory.
-3. Create a **D1 database** in Cloudflare.
-4. In the Pages project, add a D1 binding named exactly:
-   - `LOANSBAZAAR_DB`
-5. Run the SQL in `functions/schema.sql` against that D1 database.
-6. Redeploy the Pages project.
+3. The included `wrangler.toml` configures the D1 binding automatically:
+   - Binding: `LOANSBAZAAR_DB`
+   - Database: `loansbazaar-db`
+   - Database ID: `e8049730-c319-4045-ad37-f4910302e716`
+4. Run the SQL in `functions/schema.sql` against that D1 database if it has not already been run. (It has already been created for this project.)
+5. Deploy/redeploy the Pages project so the binding takes effect.
+
+Cloudflare supports configuring Pages D1 bindings through Wrangler as an alternative to the dashboard binding UI.
 
 The form endpoint `/api/submit` now saves the enquiry to D1 before attempting email notification. This means a temporary email failure does **not** lose the submitted lead.
 
