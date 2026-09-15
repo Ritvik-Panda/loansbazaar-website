@@ -1,16 +1,30 @@
 # LoansBazaar Workers + D1 + Admin Dashboard
 
-Cloudflare Worker serving the public LoansBazaar website on `loansbazaar.co.in` and a protected admin dashboard on `admin.loansbazaar.co.in`.
+This package deploys the LoansBazaar website as a Cloudflare Worker with static assets, D1 enquiry storage, and a private admin dashboard.
 
-## Cloudflare runtime configuration
-- D1 binding: `LOANSBAZAAR_DB`
-- D1 database: `loansbazaar-db`
-- Required admin variables: `ADMIN_USER`, `ADMIN_PASSWORD`
-- Recommended secret: `ADMIN_SESSION_SECRET` (a long random value)
-- Optional email variables: `RESEND_API_KEY`, `NOTIFY_EMAIL`, `FROM_EMAIL`
+## Important admin routing fix
+The admin dashboard is served from `/admin.html` rather than `public/admin/index.html`. This avoids Cloudflare Static Assets directory-index redirects that can cause a 307 redirect loop on `/admin/`.
 
-The admin dashboard reads enquiries from D1 and supports search, type filtering, refresh, statistics and CSV export.
+The Worker serves `/admin.html` for:
+- `https://admin.loansbazaar.co.in/`
+- `https://admin.loansbazaar.co.in/admin`
+- `https://admin.loansbazaar.co.in/admin/`
+- `https://admin.loansbazaar.co.in/admin/index.html`
 
+The public domain cannot access `/admin` routes.
 
-## Domain routing
-`assets.run_worker_first = true` is required because the Worker selects the public or admin site based on hostname. `loansbazaar.co.in` serves the public site, while `admin.loansbazaar.co.in` serves `public/admin/index.html`.
+## Required Cloudflare variables/secrets
+Variables:
+- `ADMIN_USER`
+- `NOTIFY_EMAIL`
+- `FROM_EMAIL` (if email notifications are enabled)
+
+Secrets:
+- `ADMIN_PASSWORD`
+- `ADMIN_SESSION_SECRET`
+- `RESEND_API_KEY` (optional, for email notifications)
+
+D1 binding:
+- `LOANSBAZAAR_DB`
+
+Do not store `ADMIN_PASSWORD` as a plaintext Variable. Use a Cloudflare Secret.

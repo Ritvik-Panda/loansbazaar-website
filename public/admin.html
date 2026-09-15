@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LoansBazaar Admin</title>
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <main class="shell">
+    <section id="loginCard" class="card login-card">
+      <div class="brand">LoansBazaar</div>
+      <h1>Admin Login</h1>
+      <p>Secure enquiry dashboard</p>
+      <form id="loginForm">
+        <label>User ID<input id="username" autocomplete="username" required></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Login</button>
+        <div id="loginError" class="error"></div>
+      </form>
+    </section>
+
+    <section id="dashboard" hidden>
+      <header class="topbar">
+        <div><div class="brand">LoansBazaar</div><h1>Enquiry Dashboard</h1></div>
+        <button id="logout" class="secondary">Logout</button>
+      </header>
+
+      <div class="stats">
+        <div class="stat"><span>Total</span><strong id="total">0</strong></div>
+        <div class="stat"><span>Customers</span><strong id="customers">0</strong></div>
+        <div class="stat"><span>Partners</span><strong id="partners">0</strong></div>
+        <div class="stat"><span>Today</span><strong id="today">0</strong></div>
+      </div>
+
+      <section class="card">
+        <div class="toolbar">
+          <input id="search" placeholder="Search name, mobile, email or service…">
+          <select id="typeFilter"><option value="">All types</option><option>Customer</option><option>Partner</option></select>
+          <button id="refresh">Refresh</button>
+          <button id="export" class="secondary">Export CSV</button>
+        </div>
+        <div id="status" class="status"></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Service</th><th>Name</th><th>Age</th><th>Mobile</th><th>Email</th><th>Message</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

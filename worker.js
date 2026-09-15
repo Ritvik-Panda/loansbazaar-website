@@ -11,8 +11,8 @@ export default {
     if (url.pathname === "/api/admin/logout" && request.method === "POST") return adminLogout(isAdminHost);
     if (url.pathname === "/api/admin/enquiries" && request.method === "GET") return adminEnquiries(request, env, isAdminHost);
 
-    if (isAdminHost && (url.pathname === "/" || url.pathname === "/admin" || url.pathname === "/admin/")) {
-      return env.ASSETS.fetch(new Request(new URL("/admin/index.html", request.url), request));
+    if (isAdminHost && (url.pathname === "/" || url.pathname === "/admin" || url.pathname === "/admin/" || url.pathname === "/admin/index.html")) {
+      return env.ASSETS.fetch(new Request(new URL("/admin.html", request.url), request));
     }
     if (!isAdminHost && url.pathname.startsWith("/admin")) return new Response("Not Found", { status: 404 });
 
