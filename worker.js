@@ -16,9 +16,13 @@ export default {
     }
     if (!isAdminHost && url.pathname.startsWith("/admin")) return new Response("Not Found", { status: 404 });
 
+    // Main website root: explicitly serve public/index.html.
+    // This is required because html_handling = "none" disables automatic
+    // extensionless HTML routing for the static asset root.
     if (!isAdminHost && (url.pathname === "/" || url.pathname === "")) {
       return env.ASSETS.fetch(new Request(new URL("/index.html", request.url), request));
     }
+
     return env.ASSETS.fetch(request);
   }
 };
@@ -43,31 +47,16 @@ async function handleSubmit(request, env) {
   } catch(e){console.error(e);return json({ok:false,error:"Unexpected server error."},500)}
 }
 
-
 async function adminLogin(request,env,isAdminHost){
-  if(!isAdminHost)return json({error:"Not Found"},404);
-  try{
-    const {pin}=await request.json();
-    if(!env.ADMIN_PIN) return json({error:"Admin PIN is not configured."},500);
-    if(String(pin||"")!==String(env.ADMIN_PIN)) return json({error:"Incorrect PIN."},401);
-    const exp=Math.floor(Date.now()/1000)+SESSION_TTL;
-    const payload=b64(JSON.stringify({exp}));
-    const sig=await sign(payload,env.ADMIN_PIN);
-    return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Cache-Control":"no-store","Set-Cookie":`LB_ADMIN=${payload}.${sig}; Path=/; Max-Age=${SESSION_TTL}; HttpOnly; Secure; SameSite=Strict`}});
-  }catch(e){console.error(e);return json({error:"Login failed."},500)}
+  if(!isAdminHost) return json({error:"Not Found"},404);
+  try{const {username,password}=await request.json(); if(username!==String(env.ADMIN_USER||"")||password!==String(env.ADMIN_PASSWORD||"")) return json({error:"Invalid user ID or password."},401); const secret=env.ADMIN_SESSION_SECRET||env.ADMIN_PASSWORD; if(!secret) return json({error:"Admin session is not configured."},500); const exp=Math.floor(Date.now()/1000)+SESSION_TTL; const payload=b64(JSON.stringify({u:username,exp})); const sig=await sign(payload,secret); return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Set-Cookie":`LB_ADMIN=${payload}.${sig}; Path=/; Max-Age=${SESSION_TTL}; HttpOnly; Secure; SameSite=Strict`}})}catch(e){return json({error:"Login failed."},500)}
 }
 async function adminLogout(isAdminHost){if(!isAdminHost)return json({error:"Not Found"},404);return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Set-Cookie":"LB_ADMIN=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"}})}
 async function adminEnquiries(request,env,isAdminHost){
   if(!isAdminHost)return json({error:"Not Found"},404);
-  if(!await authorized(request,env))return json({error:"Unauthorized"},401);
   try{const result=await env.LOANSBAZAAR_DB.prepare(`SELECT id,type,service,name,age,mobile,email,message,created_at FROM enquiries ORDER BY id DESC LIMIT 500`).all(); const stats=await env.LOANSBAZAAR_DB.prepare(`SELECT COUNT(*) AS total, SUM(CASE WHEN type='Customer' THEN 1 ELSE 0 END) AS customers, SUM(CASE WHEN type='Partner' THEN 1 ELSE 0 END) AS partners, SUM(CASE WHEN date(created_at)=date('now') THEN 1 ELSE 0 END) AS today FROM enquiries`).first(); return json({ok:true,enquiries:result.results||[],stats:{total:Number(stats?.total||0),customers:Number(stats?.customers||0),partners:Number(stats?.partners||0),today:Number(stats?.today||0)}})}catch(e){console.error(e);return json({error:"Could not load enquiries."},500)}
 }
-async function authorized(request,env){
-  const raw=getCookie(request,"LB_ADMIN"); if(!raw||!env.ADMIN_PIN)return false;
-  const dot=raw.lastIndexOf("."); if(dot<1)return false;
-  const payload=raw.slice(0,dot),sig=raw.slice(dot+1);
-  try{const expected=await sign(payload,env.ADMIN_PIN); if(!timingSafeEqual(sig,expected))return false; const padded=payload.replace(/-/g,"+").replace(/_/g,"/")+"=".repeat((4-payload.length%4)%4); const data=JSON.parse(atob(padded)); return Number(data.exp)>Math.floor(Date.now()/1000)}catch{return false}
-}
+async function authorized(request,env){const raw=getCookie(request,"LB_ADMIN");if(!raw)return false;const [payload,sig]=raw.split(".");if(!payload||!sig)return false;const secret=env.ADMIN_SESSION_SECRET||env.ADMIN_PASSWORD;if(!secret)return false;try{const expected=await sign(payload,secret);if(!timingSafeEqual(sig,expected))return false;const data=JSON.parse(atob(payload.replace(/-/g,"+").replace(/_/g,"/")+"=="));return data.exp>Math.floor(Date.now()/1000)&&data.u===String(env.ADMIN_USER||"")}catch{return false}}
 async function sign(value,secret){const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return b64bytes(new Uint8Array(await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(value))))}
 function timingSafeEqual(a,b){if(a.length!==b.length)return false;let x=0;for(let i=0;i<a.length;i++)x|=a.charCodeAt(i)^b.charCodeAt(i);return x===0}
 function getCookie(request,name){const h=request.headers.get("Cookie")||"";const part=h.split(";").map(x=>x.trim()).find(x=>x.startsWith(name+"="));return part?part.slice(name.length+1):null}
