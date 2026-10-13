@@ -300,12 +300,13 @@ async function requestEmployeeOtp(request, env, isEmployeeHost) {
     employeeSessionSecret: !env.EMPLOYEE_SESSION_SECRET
   };
 
-  if (Object.values(missingConfig).some(Boolean)) {
-    console.error("Employee registration configuration check failed:", missingConfig);
-    return json({
-      error: "Registration service is not fully configured."
-    }, 500);
-  }
+ if (Object.values(missingConfig).some(Boolean)) {
+  console.error("Employee registration configuration check failed:", missingConfig);
+  return json({
+    error: "Registration service is not fully configured.",
+    diagnostic: missingConfig
+  }, 500);
+}
 
   try {
     const data = await request.json();
