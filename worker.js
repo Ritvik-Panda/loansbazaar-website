@@ -415,11 +415,11 @@ async function requestEmployeeOtp(request, env, isEmployeeHost) {
     });
   } catch (e) {
     // Diagnostic detail is recorded in Cloudflare logs; never return it to clients.
-    console.error("Employee OTP request failed:", {
-      name: e?.name,
-      message: e?.message,
-      stack: e?.stack
-    });
+    console.error(
+  "EMPLOYEE_OTP_DIAGNOSTIC",
+  String(e?.name || "Error"),
+  String(e?.message || e || "Unknown error")
+);
     return json({ error: "Could not start registration." }, 500);
   }
 }
