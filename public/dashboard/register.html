@@ -1,0 +1,430 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#082a63">
+  <title>Employee Registration | LoansBazaar</title>
+
+  <style>
+    :root {
+      --navy: #082a63;
+      --green: #159447;
+      --ink: #172b4d;
+      --muted: #718096;
+      --line: #e7edf5;
+      --bg: #f5f8fc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 480px;
+      padding: 30px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(8, 42, 99, 0.07);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 27px;
+      color: var(--navy);
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      background: var(--green);
+      color: white;
+      border-radius: 12px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 26px;
+      line-height: 1.3;
+    }
+
+    .intro {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 7px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 46px;
+      padding: 12px;
+      border: 1px solid #d7e0ed;
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(21, 148, 71, 0.1);
+    }
+
+    button {
+      width: 100%;
+      min-height: 47px;
+      margin-top: 22px;
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--green);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      filter: brightness(0.96);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    button.secondary {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--navy);
+    }
+
+    .status {
+      margin-top: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .status:empty {
+      display: none;
+    }
+
+    .back {
+      display: block;
+      margin-top: 23px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .back:hover {
+      color: var(--navy);
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 14px;
+      }
+
+      .panel {
+        padding: 23px 19px;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="panel">
+    <div class="brand">
+      <div class="brand-mark">L</div>
+      <span>LoansBazaar</span>
+    </div>
+
+    <h1>Employee Registration</h1>
+
+    <p class="intro">
+      Register as a LoansBazaar employee using your details.
+      Verify your email address to create your account.
+    </p>
+
+    <!-- Employee details -->
+    <form id="detailsForm">
+      <label for="name">Full Name</label>
+      <input
+        id="name"
+        name="name"
+        type="text"
+        autocomplete="name"
+        maxlength="120"
+        placeholder="Enter your full name"
+        required
+      >
+
+      <label for="age">Age</label>
+      <input
+        id="age"
+        name="age"
+        type="number"
+        min="18"
+        max="100"
+        placeholder="Enter your age"
+        required
+      >
+
+      <label for="mobile">Mobile Number</label>
+      <input
+        id="mobile"
+        name="mobile"
+        type="tel"
+        autocomplete="tel"
+        maxlength="30"
+        placeholder="+919876543210"
+        required
+      >
+
+      <label for="email">Email Address</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        maxlength="160"
+        placeholder="Enter your email address"
+        required
+      >
+
+      <button id="sendButton" type="submit">
+        Send Verification OTP
+      </button>
+    </form>
+
+    <!-- Email OTP verification -->
+    <form id="otpForm" hidden>
+      <label for="otp">Email Verification Code</label>
+      <input
+        id="otp"
+        name="otp"
+        type="text"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        pattern="[0-9]{6}"
+        maxlength="6"
+        placeholder="Enter your 6-digit OTP"
+        required
+      >
+
+      <button id="verifyButton" type="submit">
+        Verify OTP &amp; Create Account
+      </button>
+
+      <button id="editButton" class="secondary" type="button">
+        Edit Registration Details
+      </button>
+    </form>
+
+    <div
+      id="status"
+      class="status"
+      role="status"
+      aria-live="polite"
+    ></div>
+
+    <a class="back" href="/">
+      &larr; Back to LoansBazaar
+    </a>
+  </main>
+
+  <script>
+    const detailsForm = document.getElementById("detailsForm");
+    const otpForm = document.getElementById("otpForm");
+    const statusBox = document.getElementById("status");
+    const sendButton = document.getElementById("sendButton");
+    const verifyButton = document.getElementById("verifyButton");
+    const otpInput = document.getElementById("otp");
+    const editButton = document.getElementById("editButton");
+
+    let registration = null;
+
+    function showMessage(message, success = false) {
+      statusBox.textContent = message;
+      statusBox.style.color = success ? "#159447" : "#b42318";
+    }
+
+    async function postJson(path, body) {
+      const response = await fetch(path, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "same-origin",
+        cache: "no-store",
+        body: JSON.stringify(body)
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+          result.message ||
+          "Something went wrong. Please try again."
+        );
+      }
+
+      return result;
+    }
+
+    // Step 1: Request an email OTP.
+    detailsForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!detailsForm.reportValidity()) {
+        return;
+      }
+
+      registration = {
+        name: document.getElementById("name").value.trim(),
+        age: Number(document.getElementById("age").value),
+        mobile: document.getElementById("mobile").value.trim(),
+        email: document.getElementById("email").value.trim().toLowerCase()
+      };
+
+      if (
+        !registration.name ||
+        !Number.isInteger(registration.age) ||
+        registration.age < 18 ||
+        registration.age > 100 ||
+        !registration.mobile ||
+        !registration.email
+      ) {
+        showMessage("Please enter valid registration details.");
+        return;
+      }
+
+      sendButton.disabled = true;
+      sendButton.textContent = "Sending OTP...";
+      showMessage("");
+
+      try {
+        const result = await postJson(
+          "/api/employee/register/request-otp",
+          registration
+        );
+
+        detailsForm.hidden = true;
+        otpForm.hidden = false;
+        otpInput.value = "";
+        otpInput.focus();
+
+        showMessage(
+          result.message ||
+          "Verification code sent. Check your email inbox and spam folder.",
+          true
+        );
+      } catch (error) {
+        showMessage(error.message);
+      } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = "Send Verification OTP";
+      }
+    });
+
+    // Step 2: Verify OTP and request account creation.
+    otpForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!otpForm.reportValidity() || !registration) {
+        return;
+      }
+
+      const otp = otpInput.value.trim();
+
+      if (!/^\d{6}$/.test(otp)) {
+        showMessage("Enter the valid 6-digit OTP sent to your email.");
+        return;
+      }
+
+      verifyButton.disabled = true;
+      verifyButton.textContent = "Verifying...";
+      showMessage("");
+
+      try {
+        const result = await postJson(
+          "/api/employee/register/verify-otp",
+          {
+            ...registration,
+            otp
+          }
+        );
+
+        if (!result.ok || !result.partner) {
+          throw new Error(
+            "The server did not confirm account creation. Please try again."
+          );
+        }
+
+        showMessage(
+          "Registration completed. Opening your dashboard...",
+          true
+        );
+
+        window.location.assign("/dashboard/");
+      } catch (error) {
+        showMessage(error.message);
+      } finally {
+        verifyButton.disabled = false;
+        verifyButton.textContent = "Verify OTP & Create Account";
+      }
+    });
+
+    // Allow correction of the details before requesting another OTP.
+    editButton.addEventListener("click", () => {
+      otpForm.hidden = true;
+      detailsForm.hidden = false;
+      otpInput.value = "";
+      showMessage("Update your details and request a new OTP.");
+    });
+  </script>
+</body>
+</html>
