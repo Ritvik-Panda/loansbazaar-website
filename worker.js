@@ -293,8 +293,15 @@ async function authorized(request, env) {
 async function requestEmployeeOtp(request, env, isEmployeeHost) {
   if (!isEmployeeHost) return json({ error: "Not Found" }, 404);
 
-  if (!env.LOANSBAZAAR_DB || !env.RESEND_API_KEY ||
-      !env.FROM_EMAIL || !env.EMPLOYEE_SESSION_SECRET) {
+  const missingConfig = {
+    database: !env.LOANSBAZAAR_DB,
+    resendApiKey: !env.RESEND_API_KEY,
+    fromEmail: !env.FROM_EMAIL,
+    employeeSessionSecret: !env.EMPLOYEE_SESSION_SECRET
+  };
+
+  if (Object.values(missingConfig).some(Boolean)) {
+    console.error("Employee registration configuration check failed:", missingConfig);
     return json({
       error: "Registration service is not fully configured."
     }, 500);
