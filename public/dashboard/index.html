@@ -1,1 +1,409 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#082a63">
+<title>Employee Dashboard | LoansBazaar</title>
+<style>
+:root {
+  --navy:#082a63;
+  --green:#159447;
+  --orange:#f28c28;
+  --ink:#172b4d;
+  --muted:#718096;
+  --line:#e7edf5;
+  --bg:#f5f8fc;
+  --white:#ffffff;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+}
+a {text-decoration:none;color:inherit}
+button {font:inherit}
+.sidebar {
+  position:fixed;
+  top:0;bottom:0;left:0;
+  width:250px;
+  padding:25px 17px;
+  background:var(--navy);
+  color:white;
+  display:flex;
+  flex-direction:column;
+}
+.brand {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:0 9px 30px;
+}
+.brand-icon {
+  width:43px;height:43px;
+  display:grid;place-items:center;
+  border-radius:13px;
+  background:var(--green);
+  font-size:24px;font-weight:800;
+}
+.brand-name {font-size:20px;font-weight:800}
+.brand-sub {
+  color:#b8c9e8;font-size:10px;
+  letter-spacing:1.5px;margin-top:4px;
+}
+.nav-label {
+  padding:13px 11px 8px;
+  color:#9eb4da;font-size:10px;
+  letter-spacing:1.4px;text-transform:uppercase;
+}
+.nav-link {
+  display:flex;align-items:center;gap:12px;
+  padding:12px;margin:3px 0;
+  border-radius:10px;color:#d8e3f5;font-size:13px;
+}
+.nav-link:hover,.nav-link.active {
+  background:#ffffff18;color:white;
+}
+.nav-link.active {box-shadow:inset 3px 0 #55d68b}
+.nav-icon {width:21px;text-align:center;font-size:17px}
+.sidebar-bottom {
+  margin-top:auto;border-top:1px solid #ffffff20;
+  padding:18px 9px 0;color:#b8c9e8;
+  font-size:12px;line-height:1.7;
+}
+.main {margin-left:250px;min-width:0}
+.topbar {
+  height:74px;background:white;
+  border-bottom:1px solid var(--line);
+  padding:0 32px;display:flex;
+  align-items:center;justify-content:space-between;gap:15px;
+}
+.breadcrumb {color:var(--muted);font-size:12px}
+.breadcrumb strong {color:var(--ink)}
+.top-actions {display:flex;align-items:center;gap:13px}
+.icon-button {
+  width:39px;height:39px;border:1px solid var(--line);
+  background:white;border-radius:12px;cursor:pointer;
+}
+.avatar {
+  width:39px;height:39px;border-radius:50%;
+  display:grid;place-items:center;
+  background:#e1edff;color:var(--navy);font-weight:800;
+}
+.content {max-width:1500px;margin:auto;padding:30px 32px 40px}
+.welcome {
+  display:flex;justify-content:space-between;
+  align-items:center;gap:20px;margin-bottom:24px;
+}
+.eyebrow {
+  color:var(--green);font-size:11px;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;
+}
+h1 {margin:8px 0;font-size:clamp(24px,3vw,32px);letter-spacing:-1px}
+.subtitle {margin:0;color:var(--muted);font-size:14px;line-height:1.7}
+.primary-button {
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:0;border-radius:10px;background:var(--green);color:white;
+  font-weight:700;font-size:13px;padding:13px 17px;cursor:pointer;
+}
+.primary-button:hover {background:#107b39}
+.notice {
+  display:flex;align-items:flex-start;gap:13px;
+  background:#fff8eb;border:1px solid #f7dfb7;
+  border-radius:13px;padding:15px 17px;margin-bottom:25px;
+}
+.notice-icon {
+  width:36px;height:36px;display:grid;place-items:center;
+  background:#ffebca;border-radius:10px;flex-shrink:0;
+}
+.notice strong {font-size:13px}
+.notice p {color:#786348;font-size:12px;line-height:1.6;margin:4px 0 0}
+.section-heading {
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin:28px 0 15px;
+}
+h2 {font-size:16px;margin:0}
+.section-hint {font-size:11px;color:var(--muted)}
+.stats {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;
+}
+.card {
+  background:white;border:1px solid var(--line);
+  border-radius:15px;padding:19px;min-width:0;
+  box-shadow:0 3px 12px #12284a05;
+}
+.stat-top {display:flex;justify-content:space-between;align-items:center;gap:8px}
+.stat-label {font-size:12px;color:var(--muted)}
+.stat-icon {
+  width:39px;height:39px;display:grid;place-items:center;
+  border-radius:12px;font-size:19px;
+}
+.blue {background:#eaf1ff}
+.green {background:#e6f7ed}
+.orange {background:#fff0df}
+.purple {background:#f0eaff}
+.stat-value {font-size:29px;font-weight:800;margin:15px 0 5px;letter-spacing:-1px}
+.stat-foot {color:var(--muted);font-size:11px;line-height:1.5}
+.products {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;
+}
+.product-card {
+  display:block;background:white;border:1px solid var(--line);
+  border-radius:14px;padding:18px;transition:.2s;
+}
+.product-card:hover {
+  border-color:#a8d9ba;transform:translateY(-2px);
+  box-shadow:0 9px 22px #082a630d;
+}
+.product-icon {
+  width:43px;height:43px;border-radius:12px;
+  display:grid;place-items:center;font-size:21px;margin-bottom:15px;
+}
+.product-card strong {display:block;font-size:13px;margin-bottom:6px}
+.product-card p {margin:0;font-size:11px;line-height:1.6;color:var(--muted)}
+.product-arrow {display:block;color:var(--green);margin-top:14px;font-size:12px;font-weight:700}
+.lower-grid {
+  display:grid;grid-template-columns:1.4fr 1fr;gap:17px;margin-top:22px;
+}
+.empty-state {text-align:center;padding:28px 12px 23px}
+.empty-icon {
+  width:55px;height:55px;margin:0 auto 13px;border-radius:17px;
+  display:grid;place-items:center;background:#eef3fb;font-size:24px;
+}
+.empty-state strong {font-size:13px}
+.empty-state p {color:var(--muted);font-size:12px;line-height:1.6}
+.quick-link {
+  display:flex;align-items:center;gap:12px;
+  padding:13px 0;border-bottom:1px solid var(--line);
+}
+.quick-link:last-child {border-bottom:0}
+.quick-link-icon {
+  width:36px;height:36px;border-radius:10px;
+  display:grid;place-items:center;background:#f0f4fb;
+}
+.quick-link strong {font-size:12px;display:block}
+.quick-link small {display:block;color:var(--muted);margin-top:4px;font-size:11px}
+.quick-arrow {margin-left:auto;color:var(--muted)}
+footer {text-align:center;padding:25px 10px 0;color:#93a0b5;font-size:11px}
+.mobile-brand {display:none}
+@media(max-width:1150px) {
+  .stats,.products {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .content {padding:24px 22px 35px}
+  .topbar {padding:0 22px}
+}
+@media(max-width:720px) {
+  .sidebar {display:none}
+  .main {margin-left:0;padding-bottom:72px}
+  .topbar {height:63px;padding:0 16px}
+  .mobile-brand {display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px}
+  .mobile-brand span {background:var(--green);color:white;padding:7px;border-radius:8px}
+  .breadcrumb {display:none}
+  .content {padding:22px 15px 30px}
+  .welcome {align-items:flex-start;flex-direction:column}
+  .welcome .primary-button {width:100%}
+  .stats,.products {gap:10px}
+  .card,.product-card {padding:13px}
+  .stat-value {font-size:25px}
+  .lower-grid {grid-template-columns:1fr}
+  .section-hint {display:none}
+  .mobile-nav {
+    position:fixed;inset:auto 0 0;height:65px;z-index:20;
+    background:white;border-top:1px solid var(--line);
+    display:grid;grid-template-columns:repeat(4,1fr);
+  }
+  .mobile-nav a {
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:4px;color:var(--muted);font-size:10px;
+  }
+  .mobile-nav a:first-child {color:var(--green);font-weight:800}
+  .mobile-nav span {font-size:18px}
+}
+@media(min-width:721px) {.mobile-nav {display:none}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="/dashboard/index.html">
+    <div class="brand-icon">L</div>
+    <div>
+      <div class="brand-name">LoansBazaar</div>
+      <div class="brand-sub">BUSINESS PLATFORM</div>
+    </div>
+  </a>
+
+  <div class="nav-label">Workspace</div>
+  <a class="nav-link active" href="/dashboard/index.html"><span class="nav-icon">▦</span>Overview</a>
+  <a class="nav-link" href="#products"><span class="nav-icon">◈</span>Products & Services</a>
+  <a class="nav-link" href="#leads"><span class="nav-icon">▤</span>My Leads</a>
+  <a class="nav-link" href="#earnings"><span class="nav-icon">₹</span>My Earnings</a>
+
+  <div class="nav-label">Account</div>
+  <a class="nav-link" href="#profile"><span class="nav-icon">◎</span>My Profile</a>
+  <a class="nav-link" href="mailto:ganeshvishe@rediffmail.com"><span class="nav-icon">?</span>Help & Support</a>
+
+  <div class="sidebar-bottom">
+    <strong>LoansBazaar</strong><br>
+    Your business. One platform.<br>
+    Secure business workspace
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="mobile-brand"><span>L</span>LoansBazaar</div>
+    <div class="breadcrumb">Workspace / <strong>Overview</strong></div>
+    <div class="top-actions">
+      <button class="icon-button" aria-label="Notifications" title="Notifications">♧</button>
+      <div class="avatar" aria-label="Account">LB</div>
+    </div>
+  </header>
+
+  <div class="content">
+    <section class="welcome">
+      <div>
+        <div class="eyebrow">Your business workspace</div>
+        <h1>Welcome to your dashboard 👋</h1>
+        <p class="subtitle">Manage leads, explore financial products and grow your business.</p>
+      </div>
+      <a class="primary-button" href="#products">＋ Generate New Lead</a>
+    </section>
+
+    <section class="notice" id="profile">
+      <div class="notice-icon">ⓘ</div>
+      <div>
+        <strong>Complete your profile when you're ready</strong>
+        <p>You can start your business before completing all profile details. Required verification and bank information may be requested before commission payment.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <h2>Business overview</h2>
+        <span class="section-hint">Your personal performance summary</span>
+      </div>
+      <div class="stats">
+        <article class="card">
+          <div class="stat-top"><span class="stat-label">Total Leads</span><span class="stat-icon blue">♧</span></div>
+          <div class="stat-value">—</div>
+          <div class="stat-foot">All customer referrals</div>
+        </article>
+        <article class="card">
+          <div class="stat-top"><span class="stat-label">In Progress</span><span class="stat-icon orange">◷</span></div>
+          <div class="stat-value">—</div>
+          <div class="stat-foot">Currently being processed</div>
+        </article>
+        <article class="card" id="earnings">
+          <div class="stat-top"><span class="stat-label">Eligible Earnings</span><span class="stat-icon purple">₹</span></div>
+          <div class="stat-value">₹—</div>
+          <div class="stat-foot">Subject to commission approval</div>
+        </article>
+        <article class="card">
+          <div class="stat-top"><span class="stat-label">Completed Leads</span><span class="stat-icon green">✓</span></div>
+          <div class="stat-value">—</div>
+          <div class="stat-foot">Successfully completed</div>
+        </article>
+      </div>
+    </section>
+
+    <section id="products">
+      <div class="section-heading">
+        <h2>Explore products & services</h2>
+        <span class="section-hint">Choose a segment to get started</span>
+      </div>
+      <div class="products">
+        <a class="product-card" href="/dashboard/demat/">
+          <div class="product-icon blue">▥</div>
+          <strong>Demat Account</strong>
+          <p>Help customers explore account-opening options.</p>
+          <span class="product-arrow">Open module →</span>
+        </a>
+        <a class="product-card" href="/dashboard/loans/">
+          <div class="product-icon green">₹</div>
+          <strong>Loans</strong>
+          <p>Capture and follow up on loan enquiries.</p>
+          <span class="product-arrow">Open module →</span>
+        </a>
+        <a class="product-card" href="/dashboard/health-insurance/">
+          <div class="product-icon orange">♡</div>
+          <strong>Health Insurance</strong>
+          <p>Help customers explore health cover.</p>
+          <span class="product-arrow">Open module →</span>
+        </a>
+        <a class="product-card" href="/dashboard/life-insurance/">
+          <div class="product-icon purple">✚</div>
+          <strong>Life Insurance</strong>
+          <p>Capture life insurance enquiries.</p>
+          <span class="product-arrow">Open module →</span>
+        </a>
+        <a class="product-card" href="/dashboard/mutual-funds/">
+          <div class="product-icon green">↗</div>
+          <strong>Mutual Funds</strong>
+          <p>Track mutual fund customer referrals.</p>
+          <span class="product-arrow">Open module →</span>
+        </a>
+        <a class="product-card" href="/dashboard/sif/">
+          <div class="product-icon orange">◉</div>
+          <strong>SIF</strong>
+          <p>Manage specialised investment fund enquiries.</p>
+          <span class="product-arrow">Open module →</span>
+        </a>
+        <a class="product-card" href="/dashboard/unlisted-shares/">
+          <div class="product-icon purple">▤</div>
+          <strong>Unlisted Shares</strong>
+          <p>Track enquiries about unlisted opportunities.</p>
+          <span class="product-arrow">Open module →</span>
+        </a>
+        <a class="product-card" href="/#contact">
+          <div class="product-icon blue">＋</div>
+          <strong>More Services</strong>
+          <p>Explore additional services as they launch.</p>
+          <span class="product-arrow">Explore services →</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="lower-grid">
+      <section class="card" id="leads">
+        <div class="section-heading" style="margin-top:0">
+          <h2>Recent leads</h2><span class="section-hint">Latest customer activity</span>
+        </div>
+        <div class="empty-state">
+          <div class="empty-icon">▤</div>
+          <strong>Your leads will appear here</strong>
+          <p>Once lead submission is connected, track your customer referrals here.</p>
+        </div>
+      </section>
+      <section class="card">
+        <div class="section-heading" style="margin-top:0"><h2>Quick access</h2></div>
+        <a class="quick-link" href="#profile">
+          <span class="quick-link-icon">◎</span>
+          <span><strong>My Profile</strong><small>Manage your personal details</small></span>
+          <span class="quick-arrow">→</span>
+        </a>
+        <a class="quick-link" href="#earnings">
+          <span class="quick-link-icon">₹</span>
+          <span><strong>My Earnings</strong><small>Review commission information</small></span>
+          <span class="quick-arrow">→</span>
+        </a>
+        <a class="quick-link" href="mailto:ganeshvishe@rediffmail.com">
+          <span class="quick-link-icon">?</span>
+          <span><strong>Help & Support</strong><small>Contact LoansBazaar</small></span>
+          <span class="quick-arrow">→</span>
+        </a>
+      </section>
+    </div>
+    <footer>© LoansBazaar · Your business, one platform.</footer>
+  </div>
+</main>
+
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <a href="/dashboard/index.html"><span>▦</span>Home</a>
+  <a href="#products"><span>◈</span>Products</a>
+  <a href="#leads"><span>▤</span>Leads</a>
+  <a href="#profile"><span>◎</span>Profile</a>
+</nav>
+</body>
+</html>
