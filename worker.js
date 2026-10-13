@@ -13,12 +13,10 @@ export default {
       url.hostname === EMPLOYEE_HOST ||
       url.hostname === `www.${EMPLOYEE_HOST}`;
 
-    // Existing customer and partner enquiry form.
     if (url.pathname === "/api/submit" && request.method === "POST") {
       return handleSubmit(request, env);
     }
 
-    // Existing admin authentication and enquiry dashboard.
     if (url.pathname === "/api/admin/login" && request.method === "POST") {
       return adminLogin(request, env, isAdminHost);
     }
@@ -31,19 +29,21 @@ export default {
       return adminEnquiries(request, env, isAdminHost);
     }
 
-    // Employee/partner registration.
-    if (url.pathname === "/api/employee/register/request-otp" &&
-        request.method === "POST") {
+    if (
+      url.pathname === "/api/employee/register/request-otp" &&
+      request.method === "POST"
+    ) {
       return requestEmployeeOtp(request, env, isEmployeeHost);
     }
 
-    if (url.pathname === "/api/employee/register/verify-otp" &&
-        request.method === "POST") {
+    if (
+      url.pathname === "/api/employee/register/verify-otp" &&
+      request.method === "POST"
+    ) {
       return verifyEmployeeOtp(request, env, isEmployeeHost);
     }
 
-    if (url.pathname === "/api/employee/logout" &&
-        request.method === "POST") {
+    if (url.pathname === "/api/employee/logout" && request.method === "POST") {
       if (!isEmployeeHost) return json({ error: "Not Found" }, 404);
 
       return new Response(JSON.stringify({ ok: true }), {
@@ -56,9 +56,10 @@ export default {
       });
     }
 
-    // Admin dashboard is served only on the admin host.
-    if (isAdminHost &&
-        ["/", "/admin", "/admin/", "/admin/index.html"].includes(url.pathname)) {
+    if (
+      isAdminHost &&
+      ["/", "/admin", "/admin/", "/admin/index.html"].includes(url.pathname)
+    ) {
       return env.ASSETS.fetch(
         new Request(new URL("/admin.html", request.url), request)
       );
@@ -68,7 +69,6 @@ export default {
       return new Response("Not Found", { status: 404 });
     }
 
-    // Main website root.
     if (!isAdminHost && (url.pathname === "/" || url.pathname === "")) {
       return env.ASSETS.fetch(
         new Request(new URL("/index.html", request.url), request)
@@ -329,7 +329,6 @@ async function requestEmployeeOtp(request, env, isEmployeeHost) {
       }, 409);
     }
 
-    // Limit OTP requests to five per email in one hour.
     const rate = await env.LOANSBAZAAR_DB.prepare(
       `SELECT COUNT(*) AS total
        FROM partner_otps
@@ -343,7 +342,6 @@ async function requestEmployeeOtp(request, env, isEmployeeHost) {
       }, 429);
     }
 
-    // Enforce a 60-second cooldown between requests.
     const latest = await env.LOANSBAZAAR_DB.prepare(
       `SELECT created_at FROM partner_otps
        WHERE lower(email)=?
@@ -409,7 +407,12 @@ async function requestEmployeeOtp(request, env, isEmployeeHost) {
       message: "Verification code sent. Check your email."
     });
   } catch (e) {
-    console.error("Employee OTP request failed:", e);
+    // Diagnostic detail is recorded in Cloudflare logs; never return it to clients.
+    console.error("Employee OTP request failed:", {
+      name: e?.name,
+      message: e?.message,
+      stack: e?.stack
+    });
     return json({ error: "Could not start registration." }, 500);
   }
 }
@@ -479,8 +482,6 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
       return json({ error: "Incorrect OTP." }, 400);
     }
 
-    // Retrieve the submitted registration details from the request.
-    // The registration form must send these fields again with the OTP.
     const name = clean(data.name, 120);
     const age = Number(data.age);
     const mobile = clean(data.mobile, 30);
@@ -547,7 +548,11 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
       }
     });
   } catch (e) {
-    console.error("Employee OTP verification failed:", e);
+    console.error("Employee OTP verification failed:", {
+      name: e?.name,
+      message: e?.message,
+      stack: e?.stack
+    });
     return json({ error: "Could not verify the code." }, 500);
   }
 }
@@ -558,7 +563,6 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
 // ============================================================
 
 async function createPartnerCode(env) {
-  // Retry a few times in the very unlikely event of a code collision.
   for (let i = 0; i < 5; i++) {
     const bytes = crypto.getRandomValues(new Uint8Array(5));
     const suffix = Array.from(bytes, b => b.toString(16).padStart(2, "0"))
