@@ -43,6 +43,26 @@ export default {
       return verifyEmployeeOtp(request, env, isEmployeeHost);
     }
 
+    if (url.pathname === "/api/employee/session" && request.method === "GET") {
+      if (!isEmployeeHost) return json({ error: "Not Found" }, 404);
+
+      const session = await getEmployeeSession(request, env);
+      if (!session.ok) {
+        return json({ ok: false, error: session.error }, session.status);
+      }
+
+      return json({
+        ok: true,
+        employee: {
+          id: session.partner.id,
+          partnerCode: session.partner.partner_code,
+          name: session.partner.name,
+          email: session.partner.email,
+          status: session.partner.status
+        }
+      });
+    }
+
     if (url.pathname === "/api/employee/logout" && request.method === "POST") {
       if (!isEmployeeHost) return json({ error: "Not Found" }, 404);
 
@@ -73,6 +93,47 @@ export default {
       return env.ASSETS.fetch(
         new Request(new URL("/index.html", request.url), request)
       );
+    }
+
+    // Protect employee dashboard pages before static assets are served.
+    // Registration remains public so new users can register or see their status.
+    if (
+      isEmployeeHost &&
+      url.pathname.startsWith("/dashboard") &&
+      url.pathname !== "/dashboard/register.html"
+    ) {
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers: { "Cache-Control": "no-store", "Allow": "GET, HEAD" }
+        });
+      }
+
+      const session = await getEmployeeSession(request, env);
+
+      if (!session.ok) {
+        if (session.status === 500) {
+          return new Response("Employee session service is temporarily unavailable.", {
+            status: 500,
+            headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
+          });
+        }
+
+        const destination = session.status === 403
+          ? "/dashboard/register.html?status=pending"
+          : "/dashboard/register.html";
+
+        return Response.redirect(new URL(destination, request.url).toString(), 302);
+      }
+
+      const response = await env.ASSETS.fetch(request);
+      const headers = new Headers(response.headers);
+      headers.set("Cache-Control", "no-store");
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers
+      });
     }
 
     return env.ASSETS.fetch(request);
@@ -569,6 +630,73 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
 // ============================================================
 // SHARED SECURITY AND RESPONSE HELPERS
 // ============================================================
+
+
+
+// Validate the signed employee cookie and check current account status.
+async function getEmployeeSession(request, env) {
+  if (!env.LOANSBAZAAR_DB || !env.EMPLOYEE_SESSION_SECRET) {
+    return {
+      ok: false,
+      status: 500,
+      error: "Employee session service is not configured."
+    };
+  }
+
+  const raw = getCookie(request, "LB_EMPLOYEE");
+  if (!raw) {
+    return { ok: false, status: 401, error: "Please log in." };
+  }
+
+  const [payload, signature] = raw.split(".");
+  if (!payload || !signature) {
+    return { ok: false, status: 401, error: "Invalid employee session." };
+  }
+
+  try {
+    const expected = await sign(payload, env.EMPLOYEE_SESSION_SECRET);
+    if (!timingSafeEqual(signature, expected)) {
+      return { ok: false, status: 401, error: "Invalid employee session." };
+    }
+
+    const data = JSON.parse(decodeB64(payload));
+    if (
+      !Number.isInteger(data.partnerId) ||
+      typeof data.email !== "string" ||
+      !Number.isFinite(data.exp) ||
+      data.exp <= Math.floor(Date.now() / 1000)
+    ) {
+      return { ok: false, status: 401, error: "Your session has expired. Please log in again." };
+    }
+
+    const partner = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT id, partner_code, name, email, status
+       FROM partners
+       WHERE id = ? AND lower(email) = ?
+       LIMIT 1`
+    ).bind(data.partnerId, data.email.toLowerCase()).first();
+
+    if (!partner) {
+      return { ok: false, status: 401, error: "Employee account not found." };
+    }
+
+    if (partner.status !== "active") {
+      return {
+        ok: false,
+        status: 403,
+        error: partner.status === "pending"
+          ? "Your account is awaiting approval."
+          : "Your account is not active."
+      };
+    }
+
+    return { ok: true, partner };
+  } catch (error) {
+    console.error("Employee session validation failed:", error);
+    return { ok: false, status: 401, error: "Invalid employee session." };
+  }
+}
+
 
 async function createPartnerCode(env) {
   for (let i = 0; i < 5; i++) {
