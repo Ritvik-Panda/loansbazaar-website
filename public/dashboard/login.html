@@ -1,0 +1,156 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Employee Login | LoansBazaar</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #172b4d;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      padding: 32px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px #082a6315;
+    }
+    .brand { color: #082a63; font-size: 24px; font-weight: 700; }
+    h1 { margin: 24px 0 8px; font-size: 26px; }
+    p { color: #64748b; line-height: 1.6; }
+    label { display: block; margin: 18px 0 7px; font-weight: 600; }
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: 0;
+      border-radius: 8px;
+      background: #082a63;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: wait; }
+    #message { overflow-wrap: anywhere; }
+    a { color: #082a63; }
+    .back { display: block; margin-top: 22px; text-align: center; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">LoansBazaar</div>
+    <h1>Employee Login</h1>
+    <p>Sign in using the email address registered with your employee account.</p>
+
+    <form id="loginForm">
+      <label for="email">Registered email address</label>
+      <input id="email" name="email" type="email"
+             autocomplete="email" required
+             placeholder="you@example.com">
+
+      <button id="sendButton" type="submit">Send Login OTP</button>
+    </form>
+
+    <form id="verifyForm" hidden>
+      <label for="otp">Email verification code</label>
+      <input id="otp" name="otp" inputmode="numeric"
+             autocomplete="one-time-code" required
+             placeholder="Enter the OTP">
+      <button id="verifyButton" type="submit">Verify & Login</button>
+    </form>
+
+    <p id="message" role="status" aria-live="polite"></p>
+    <a class="back" href="/">← Back to LoansBazaar</a>
+  </main>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const verifyForm = document.getElementById("verifyForm");
+    const message = document.getElementById("message");
+    const emailInput = document.getElementById("email");
+    let verifiedEmail = "";
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = document.getElementById("sendButton");
+      button.disabled = true;
+      message.textContent = "Requesting login OTP...";
+
+      try {
+        const response = await fetch("/api/employee/login/request-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: emailInput.value.trim() })
+        });
+        const data = await response.json();
+        if (!response.ok || data.ok === false) {
+          throw new Error(data.message || "Could not send login OTP.");
+        }
+
+        verifiedEmail = emailInput.value.trim();
+        emailInput.readOnly = true;
+        verifyForm.hidden = false;
+        message.textContent = data.message || "Check your email for the login OTP.";
+      } catch (error) {
+        message.textContent = error.message || "Login request failed.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    verifyForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = document.getElementById("verifyButton");
+      button.disabled = true;
+      message.textContent = "Verifying OTP...";
+
+      try {
+        const response = await fetch("/api/employee/login/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            email: verifiedEmail,
+            otp: document.getElementById("otp").value.trim()
+          })
+        });
+        const data = await response.json();
+
+        if (!response.ok || data.ok === false) {
+          throw new Error(data.message || "OTP verification failed.");
+        }
+
+        if (data.redirect) {
+          window.location.assign(data.redirect);
+        } else {
+          message.textContent =
+            "OTP accepted, but the server did not provide a dashboard redirect. Please check the login API.";
+        }
+      } catch (error) {
+        message.textContent = error.message || "Login failed.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
+```
