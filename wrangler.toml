@@ -8,6 +8,9 @@ binding = "ASSETS"
 run_worker_first = true
 html_handling = "none"
 
+[vars]
+FROM_EMAIL = "LoansBazaar <noreply@updates.loansbazaar.co.in>"
+
 [[d1_databases]]
 binding = "LOANSBAZAAR_DB"
 database_name = "loansbazaar-db"
