@@ -856,7 +856,7 @@ async function verifyEmployeeLoginOtp(request, env, isEmployeeHost) {
     return new Response(JSON.stringify({
       ok: true,
       message: "Login successful.",
-      redirect: "/dashboard/index.html"
+      redirect: "/dashboard/home.html"
     }), {
       headers: {
         "Content-Type": "application/json",
