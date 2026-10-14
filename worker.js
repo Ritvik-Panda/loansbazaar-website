@@ -43,6 +43,20 @@ export default {
       return verifyEmployeeOtp(request, env, isEmployeeHost);
     }
 
+    if (
+      url.pathname === "/api/employee/login/request-otp" &&
+      request.method === "POST"
+    ) {
+      return requestEmployeeLoginOtp(request, env, isEmployeeHost);
+    }
+
+    if (
+      url.pathname === "/api/employee/login/verify-otp" &&
+      request.method === "POST"
+    ) {
+      return verifyEmployeeLoginOtp(request, env, isEmployeeHost);
+    }
+
     if (url.pathname === "/api/employee/session" && request.method === "GET") {
       if (!isEmployeeHost) return json({ error: "Not Found" }, 404);
 
@@ -100,7 +114,8 @@ export default {
     if (
       isEmployeeHost &&
       url.pathname.startsWith("/dashboard") &&
-      url.pathname !== "/dashboard/register.html"
+      url.pathname !== "/dashboard/register.html" &&
+      url.pathname !== "/dashboard/login.html"
     ) {
       if (request.method !== "GET" && request.method !== "HEAD") {
         return new Response("Method Not Allowed", {
@@ -121,7 +136,7 @@ export default {
 
         const destination = session.status === 403
           ? "/dashboard/register.html?status=pending"
-          : "/dashboard/register.html";
+          : "/dashboard/login.html";
 
         return Response.redirect(new URL(destination, request.url).toString(), 302);
       }
@@ -623,6 +638,236 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
       stack: e?.stack
     });
     return json({ error: "Could not verify the code." }, 500);
+  }
+}
+
+
+// ============================================================
+// EMPLOYEE LOGIN — REQUEST OTP
+// ============================================================
+
+async function requestEmployeeLoginOtp(request, env, isEmployeeHost) {
+  if (!isEmployeeHost) return json({ error: "Not Found" }, 404);
+
+  if (!env.LOANSBAZAAR_DB || !env.EMPLOYEE_SESSION_SECRET ||
+      !env.RESEND_API_KEY || !env.FROM_EMAIL) {
+    return json({ error: "Login service is not configured." }, 500);
+  }
+
+  try {
+    const data = await request.json();
+    const email = clean(data.email, 160).toLowerCase();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return json({ error: "Enter a valid email address." }, 400);
+    }
+
+    const partner = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT id FROM partners
+       WHERE lower(email) = ? AND status = 'active'
+       LIMIT 1`
+    ).bind(email).first();
+
+    if (!partner) {
+      return json({
+        error: "No active employee account was found for this email."
+      }, 404);
+    }
+
+    const rate = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT COUNT(*) AS total
+       FROM employee_login_otps
+       WHERE lower(email) = ?
+       AND created_at >= datetime('now', '-1 hour')`
+    ).bind(email).first();
+
+    if (Number(rate?.total || 0) >= OTP_MAX_REQUESTS_PER_HOUR) {
+      return json({
+        error: "Too many OTP requests. Please try again later."
+      }, 429);
+    }
+
+    const latest = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT created_at FROM employee_login_otps
+       WHERE lower(email) = ?
+       ORDER BY id DESC LIMIT 1`
+    ).bind(email).first();
+
+    if (latest?.created_at) {
+      const recent = await env.LOANSBAZAAR_DB.prepare(
+        `SELECT CASE WHEN datetime(?) > datetime('now', '-60 seconds')
+         THEN 1 ELSE 0 END AS waiting`
+      ).bind(latest.created_at).first();
+
+      if (Number(recent?.waiting || 0) === 1) {
+        return json({
+          error: "Please wait 60 seconds before requesting another OTP."
+        }, 429);
+      }
+    }
+
+    const otp = String(
+      crypto.getRandomValues(new Uint32Array(1))[0] % 1000000
+    ).padStart(6, "0");
+
+    const otpHash = await sign(
+      `${email}:${otp}`,
+      env.EMPLOYEE_SESSION_SECRET
+    );
+
+    await env.LOANSBAZAAR_DB.prepare(
+      `INSERT INTO employee_login_otps
+       (email, otp_hash, expires_at, attempts)
+       VALUES (?, ?, datetime('now', '+10 minutes'), 0)`
+    ).bind(email, otpHash).run();
+
+    const mail = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: env.FROM_EMAIL,
+        to: [email],
+        subject: "Your LoansBazaar Login Code",
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto">
+            <h2>LoansBazaar Employee Login</h2>
+            <p>Your login verification code is:</p>
+            <p style="font-size:30px;font-weight:bold;letter-spacing:8px">${otp}</p>
+            <p>This code expires in 10 minutes. Do not share it.</p>
+          </div>
+        `
+      })
+    });
+
+    if (!mail.ok) {
+      console.error("Login OTP email failed:", await mail.text());
+      return json({
+        error: "Could not send the login email. Please try again later."
+      }, 502);
+    }
+
+    return json({
+      ok: true,
+      message: "Login OTP sent. Please check your email."
+    });
+  } catch (e) {
+    console.error("Employee login OTP request failed:", e);
+    return json({ error: "Could not start login." }, 500);
+  }
+}
+
+
+// ============================================================
+// EMPLOYEE LOGIN — VERIFY OTP
+// ============================================================
+
+async function verifyEmployeeLoginOtp(request, env, isEmployeeHost) {
+  if (!isEmployeeHost) return json({ error: "Not Found" }, 404);
+
+  if (!env.LOANSBAZAAR_DB || !env.EMPLOYEE_SESSION_SECRET) {
+    return json({ error: "Login service is not configured." }, 500);
+  }
+
+  try {
+    const data = await request.json();
+    const email = clean(data.email, 160).toLowerCase();
+    const otp = clean(data.otp, 6);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(otp)) {
+      return json({
+        error: "Enter your registered email and six-digit OTP."
+      }, 400);
+    }
+
+    const record = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT id, otp_hash, expires_at, attempts, verified_at
+       FROM employee_login_otps
+       WHERE lower(email) = ?
+       ORDER BY id DESC LIMIT 1`
+    ).bind(email).first();
+
+    if (!record || record.verified_at) {
+      return json({
+        error: "No active login code found. Please request a new OTP."
+      }, 400);
+    }
+
+    if (Number(record.attempts) >= OTP_MAX_ATTEMPTS) {
+      return json({
+        error: "Too many incorrect attempts. Request a new OTP."
+      }, 429);
+    }
+
+    const expiry = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT CASE WHEN datetime(?) > datetime('now')
+       THEN 1 ELSE 0 END AS valid`
+    ).bind(record.expires_at).first();
+
+    if (Number(expiry?.valid || 0) !== 1) {
+      return json({
+        error: "Your OTP has expired. Please request a new one."
+      }, 400);
+    }
+
+    const submittedHash = await sign(
+      `${email}:${otp}`,
+      env.EMPLOYEE_SESSION_SECRET
+    );
+
+    if (!timingSafeEqual(submittedHash, record.otp_hash)) {
+      await env.LOANSBAZAAR_DB.prepare(
+        `UPDATE employee_login_otps
+         SET attempts = attempts + 1 WHERE id = ?`
+      ).bind(record.id).run();
+
+      return json({ error: "Incorrect OTP." }, 400);
+    }
+
+    const partner = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT id, partner_code, name, email, status
+       FROM partners
+       WHERE lower(email) = ?
+       LIMIT 1`
+    ).bind(email).first();
+
+    if (!partner || partner.status !== "active") {
+      return json({
+        error: "Your employee account is not active."
+      }, 403);
+    }
+
+    await env.LOANSBAZAAR_DB.prepare(
+      `UPDATE employee_login_otps
+       SET verified_at = datetime('now')
+       WHERE id = ?`
+    ).bind(record.id).run();
+
+    const exp = Math.floor(Date.now() / 1000) + SESSION_TTL;
+    const payload = b64(JSON.stringify({
+      partnerId: partner.id,
+      email: partner.email,
+      exp
+    }));
+    const sig = await sign(payload, env.EMPLOYEE_SESSION_SECRET);
+
+    return new Response(JSON.stringify({
+      ok: true,
+      message: "Login successful.",
+      redirect: "/dashboard/index.html"
+    }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+        "Set-Cookie":
+          `LB_EMPLOYEE=${payload}.${sig}; Path=/; Max-Age=${SESSION_TTL}; HttpOnly; Secure; SameSite=Lax`
+      }
+    });
+  } catch (e) {
+    console.error("Employee login verification failed:", e);
+    return json({ error: "Could not verify the login code." }, 500);
   }
 }
 
