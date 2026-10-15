@@ -3,59 +3,117 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
   <title>LoansBazaar Admin</title>
   <link rel="stylesheet" href="/admin/admin.css">
+  <style>
+    [hidden] { display: none !important; }
+    .login-card {
+      max-width: 420px;
+      margin: 60px auto;
+      padding: 28px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.08);
+    }
+    .login-card h1 { margin-top: 0; }
+    .login-card label { display: block; margin: 16px 0 6px; }
+    .login-card input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+    .login-card button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      border: 0;
+      border-radius: 7px;
+      background: #159447;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .login-message { margin-top: 12px; color: #b91c1c; }
+    .logout-button {
+      margin-left: 12px;
+      padding: 9px 14px;
+      border: 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <main class="shell">
-
-    <section id="loginPanel" class="card" style="max-width:440px;margin:60px auto;display:none">
+    <section id="loginPanel" class="login-card">
       <div class="brand">LoansBazaar</div>
       <h1>Admin Login</h1>
-      <p>Sign in to manage enquiries.</p>
+      <p>Sign in to manage website enquiries.</p>
 
       <form id="loginForm">
-        <label for="username">Admin User ID</label>
-        <input id="username" name="username" autocomplete="username" required
-               style="width:100%;box-sizing:border-box;margin:8px 0 16px;padding:12px">
+        <label for="username">Admin username</label>
+        <input id="username" name="username" autocomplete="username"
+               required maxlength="100">
 
-        <label for="password">Password</label>
+        <label for="password">Admin password</label>
         <input id="password" name="password" type="password"
-               autocomplete="current-password" required
-               style="width:100%;box-sizing:border-box;margin:8px 0 16px;padding:12px">
+               autocomplete="current-password" required>
 
-        <button type="submit" id="loginButton">Login</button>
-        <p id="loginStatus" role="status" aria-live="polite"></p>
+        <button id="loginButton" type="submit">Sign In</button>
+        <div id="loginMessage" class="login-message"
+             role="alert" aria-live="polite"></div>
       </form>
     </section>
 
-    <section id="dashboard" style="display:none">
+    <section id="dashboard" hidden>
       <header class="topbar">
         <div>
           <div class="brand">LoansBazaar</div>
           <h1>Enquiry Dashboard</h1>
         </div>
-        <button id="logout" type="button">Logout</button>
+        <button id="logoutButton" class="logout-button" type="button">
+          Logout
+        </button>
       </header>
 
       <div class="stats">
-        <div class="stat"><span>Total</span><strong id="total">0</strong></div>
-        <div class="stat"><span>Customers</span><strong id="customers">0</strong></div>
-        <div class="stat"><span>Partners</span><strong id="partners">0</strong></div>
-        <div class="stat"><span>Today</span><strong id="today">0</strong></div>
+        <div class="stat">
+          <span>Total</span>
+          <strong id="total">0</strong>
+        </div>
+        <div class="stat">
+          <span>Customers</span>
+          <strong id="customers">0</strong>
+        </div>
+        <div class="stat">
+          <span>Partners</span>
+          <strong id="partners">0</strong>
+        </div>
+        <div class="stat">
+          <span>Today</span>
+          <strong id="today">0</strong>
+        </div>
       </div>
 
       <section class="card">
         <div class="toolbar">
-          <input id="search" placeholder="Search name, mobile, email or service…">
-          <select id="typeFilter">
+          <input id="search"
+                 placeholder="Search name, mobile, email or service…"
+                 aria-label="Search enquiries">
+          <select id="typeFilter" aria-label="Filter enquiry type">
             <option value="">All types</option>
-            <option>Customer</option>
-            <option>Partner</option>
+            <option value="Customer">Customer</option>
+            <option value="Partner">Partner</option>
           </select>
-          <button id="refresh" type="button">Refresh</button>
-          <button id="export" type="button" class="secondary">Export CSV</button>
+          <button id="refreshButton" type="button">Refresh</button>
+          <button id="exportButton" class="secondary" type="button">
+            Export CSV
+          </button>
         </div>
 
         <div id="status" class="status" role="status" aria-live="polite"></div>
@@ -64,8 +122,15 @@
           <table>
             <thead>
               <tr>
-                <th>ID</th><th>Date</th><th>Type</th><th>Service</th>
-                <th>Name</th><th>Age</th><th>Mobile</th><th>Email</th><th>Message</th>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Service</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Mobile</th>
+                <th>Email</th>
+                <th>Message</th>
               </tr>
             </thead>
             <tbody id="rows"></tbody>
@@ -73,8 +138,8 @@
         </div>
       </section>
     </section>
-
   </main>
-  <script src="/admin/admin.js"></script>
+
+  <script src="/admin/admin.js" defer></script>
 </body>
 </html>
