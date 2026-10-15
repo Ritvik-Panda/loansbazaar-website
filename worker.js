@@ -29,6 +29,17 @@ export default {
       return adminEnquiries(request, env, isAdminHost);
     }
 
+    if (url.pathname === "/api/admin/partners" && request.method === "GET") {
+      return adminPartners(request, env, isAdminHost);
+    }
+
+    if (
+      url.pathname === "/api/admin/partners/status" &&
+      request.method === "POST"
+    ) {
+      return adminUpdatePartnerStatus(request, env, isAdminHost);
+    }
+
     if (
       url.pathname === "/api/employee/register/request-otp" &&
       request.method === "POST"
@@ -338,6 +349,109 @@ async function adminEnquiries(request, env, isAdminHost) {
     return json({ error: "Could not load enquiries." }, 500);
   }
 }
+
+// ============================================================
+// ADMIN PARTNER MANAGEMENT
+// ============================================================
+
+async function adminPartners(request, env, isAdminHost) {
+  if (!isAdminHost) return json({ error: "Not Found" }, 404);
+
+  if (!(await authorized(request, env))) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  if (!env.LOANSBAZAAR_DB) {
+    return json({ error: "Backend database is not configured." }, 500);
+  }
+
+  try {
+    const result = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT id, partner_code, name, age, mobile, email, status, created_at
+       FROM partners
+       ORDER BY id DESC
+       LIMIT 1000`
+    ).all();
+
+    const stats = await env.LOANSBAZAAR_DB.prepare(
+      `SELECT
+         COUNT(*) AS total,
+         SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active,
+         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
+         SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) AS inactive
+       FROM partners`
+    ).first();
+
+    return json({
+      ok: true,
+      partners: result.results || [],
+      stats: {
+        total: Number(stats?.total || 0),
+        active: Number(stats?.active || 0),
+        pending: Number(stats?.pending || 0),
+        inactive: Number(stats?.inactive || 0)
+      }
+    });
+  } catch (e) {
+    console.error("Admin partners failed:", e);
+    return json({ error: "Could not load partners." }, 500);
+  }
+}
+
+async function adminUpdatePartnerStatus(request, env, isAdminHost) {
+  if (!isAdminHost) return json({ error: "Not Found" }, 404);
+
+  if (!(await authorized(request, env))) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  if (!env.LOANSBAZAAR_DB) {
+    return json({ error: "Backend database is not configured." }, 500);
+  }
+
+  try {
+    const data = await request.json();
+    const partnerId = Number(data.id);
+    const status = clean(data.status, 20).toLowerCase();
+
+    if (!Number.isInteger(partnerId) || partnerId < 1) {
+      return json({ error: "A valid partner ID is required." }, 400);
+    }
+
+    if (!["active", "pending", "inactive"].includes(status)) {
+      return json({
+        error: "Status must be active, pending, or inactive."
+      }, 400);
+    }
+
+    const existing = await env.LOANSBAZAAR_DB.prepare(
+      "SELECT id FROM partners WHERE id = ? LIMIT 1"
+    ).bind(partnerId).first();
+
+    if (!existing) {
+      return json({ error: "Partner not found." }, 404);
+    }
+
+    const updated = await env.LOANSBAZAAR_DB.prepare(
+      "UPDATE partners SET status = ? WHERE id = ?"
+    ).bind(status, partnerId).run();
+
+    if (!updated.success) {
+      return json({ error: "Could not update partner status." }, 500);
+    }
+
+    return json({
+      ok: true,
+      message: "Partner status updated successfully.",
+      id: partnerId,
+      status
+    });
+  } catch (e) {
+    console.error("Admin partner status update failed:", e);
+    return json({ error: "Could not update partner status." }, 500);
+  }
+}
+
 
 async function authorized(request, env) {
   const raw = getCookie(request, "LB_ADMIN");
