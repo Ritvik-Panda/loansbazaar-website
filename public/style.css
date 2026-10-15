@@ -30,3 +30,32 @@
   background: #107638;
   color: #ffffff;
 }
+/* Keep employee buttons visible on desktop and mobile */
+.nav a.employee-login,
+.nav a.employee-register {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav a.employee-login {
+  background: #082a63;
+  color: #fff;
+}
+
+.nav a.employee-register {
+  background: #159447;
+  color: #fff;
+}
+
+@media (max-width: 950px) {
+  .nav a.employee-login,
+  .nav a.employee-register {
+    display: inline-flex;
+  }
+}
