@@ -587,10 +587,11 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
 
     const partnerCode = await createPartnerCode(env);
 
+    // Automatically activate the partner after successful email OTP verification.
     const created = await env.LOANSBAZAAR_DB.prepare(
       `INSERT INTO partners
        (partner_code, name, age, mobile, email, status)
-       VALUES (?, ?, ?, ?, ?, 'pending')`
+       VALUES (?, ?, ?, ?, ?, 'active')`
     ).bind(partnerCode, name, age, mobile, email).run();
 
     if (!created.success) {
