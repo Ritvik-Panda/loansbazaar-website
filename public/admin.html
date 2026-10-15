@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,9 +9,34 @@
 </head>
 <body>
   <main class="shell">
-    <section id="dashboard">
+
+    <section id="loginPanel" class="card" style="max-width:440px;margin:60px auto;display:none">
+      <div class="brand">LoansBazaar</div>
+      <h1>Admin Login</h1>
+      <p>Sign in to manage enquiries.</p>
+
+      <form id="loginForm">
+        <label for="username">Admin User ID</label>
+        <input id="username" name="username" autocomplete="username" required
+               style="width:100%;box-sizing:border-box;margin:8px 0 16px;padding:12px">
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password"
+               autocomplete="current-password" required
+               style="width:100%;box-sizing:border-box;margin:8px 0 16px;padding:12px">
+
+        <button type="submit" id="loginButton">Login</button>
+        <p id="loginStatus" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="dashboard" style="display:none">
       <header class="topbar">
-        <div><div class="brand">LoansBazaar</div><h1>Enquiry Dashboard</h1></div>
+        <div>
+          <div class="brand">LoansBazaar</div>
+          <h1>Enquiry Dashboard</h1>
+        </div>
+        <button id="logout" type="button">Logout</button>
       </header>
 
       <div class="stats">
@@ -23,19 +49,31 @@
       <section class="card">
         <div class="toolbar">
           <input id="search" placeholder="Search name, mobile, email or service…">
-          <select id="typeFilter"><option value="">All types</option><option>Customer</option><option>Partner</option></select>
-          <button id="refresh">Refresh</button>
-          <button id="export" class="secondary">Export CSV</button>
+          <select id="typeFilter">
+            <option value="">All types</option>
+            <option>Customer</option>
+            <option>Partner</option>
+          </select>
+          <button id="refresh" type="button">Refresh</button>
+          <button id="export" type="button" class="secondary">Export CSV</button>
         </div>
-        <div id="status" class="status"></div>
+
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+
         <div class="table-wrap">
           <table>
-            <thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Service</th><th>Name</th><th>Age</th><th>Mobile</th><th>Email</th><th>Message</th></tr></thead>
+            <thead>
+              <tr>
+                <th>ID</th><th>Date</th><th>Type</th><th>Service</th>
+                <th>Name</th><th>Age</th><th>Mobile</th><th>Email</th><th>Message</th>
+              </tr>
+            </thead>
             <tbody id="rows"></tbody>
           </table>
         </div>
       </section>
     </section>
+
   </main>
   <script src="/admin/admin.js"></script>
 </body>
