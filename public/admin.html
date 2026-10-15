@@ -7,93 +7,399 @@
   <meta name="robots" content="noindex,nofollow">
   <title>LoansBazaar Admin</title>
   <link rel="stylesheet" href="/admin/admin.css">
+
   <style>
-    [hidden] { display: none !important; }
-    .login-card {
-      max-width: 420px;
-      margin: 60px auto;
-      padding: 28px;
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.08);
+    [hidden] {
+      display: none !important;
     }
-    .login-card h1 { margin-top: 0; }
-    .login-card label { display: block; margin: 16px 0 6px; }
-    .login-card input {
+
+    * {
       box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f3f6fb;
+      color: #172b4d;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .shell {
       width: 100%;
-      padding: 12px;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Admin login */
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      margin: 55px auto;
+      padding: 32px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 12px 35px rgba(15, 35, 70, 0.08);
+    }
+
+    .brand {
+      color: #082a63;
+      font-size: 23px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+    }
+
+    .login-card h1 {
+      margin: 24px 0 8px;
+      color: #082a63;
+      font-size: 27px;
+    }
+
+    .login-card p {
+      margin: 0 0 25px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    #loginForm {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .login-card label {
+      display: block;
+      width: 100%;
+      margin: 17px 0 8px;
+      color: #172b4d;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .login-card input {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      height: 48px;
+      margin: 0;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      color: #172b4d;
+      font: inherit;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .login-card input:focus {
+      border-color: #159447;
+      box-shadow: 0 0 0 3px rgba(21, 148, 71, 0.12);
+    }
+
+    .login-card button {
+      display: block;
+      width: 100%;
+      min-height: 48px;
+      margin-top: 25px;
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #159447;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .login-card button:hover {
+      background: #10783a;
+    }
+
+    .login-card button:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    .login-message {
+      margin-top: 14px;
+      color: #b91c1c;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Dashboard */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 26px;
+      padding: 20px 24px;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 3px 14px rgba(15, 35, 70, 0.05);
+    }
+
+    .topbar h1 {
+      margin: 8px 0 0;
+      color: #082a63;
+      font-size: 25px;
+    }
+
+    .logout-button {
+      flex-shrink: 0;
+      padding: 10px 16px;
       border: 1px solid #cbd5e1;
       border-radius: 7px;
-      font-size: 16px;
+      background: #fff;
+      color: #172b4d;
+      font-weight: 700;
+      cursor: pointer;
     }
-    .login-card button {
-      width: 100%;
-      margin-top: 20px;
-      padding: 12px;
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 22px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .stat span {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .stat strong {
+      color: #082a63;
+      font-size: 30px;
+    }
+
+    .card {
+      min-width: 0;
+      padding: 22px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      background: #fff;
+      color: #172b4d;
+      font: inherit;
+    }
+
+    .toolbar input {
+      flex: 1 1 260px;
+      min-width: 180px;
+    }
+
+    .toolbar select {
+      flex: 0 1 150px;
+    }
+
+    .toolbar button {
+      min-height: 42px;
+      padding: 10px 16px;
       border: 0;
       border-radius: 7px;
       background: #159447;
-      color: white;
-      font-size: 16px;
+      color: #fff;
+      font-weight: 700;
       cursor: pointer;
     }
-    .login-message { margin-top: 12px; color: #b91c1c; }
-    .logout-button {
-      margin-left: 12px;
-      padding: 9px 14px;
-      border: 0;
-      border-radius: 6px;
-      cursor: pointer;
+
+    .toolbar button.secondary {
+      background: #082a63;
+    }
+
+    .status {
+      margin: 12px 0;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 13px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #082a63;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    td {
+      overflow-wrap: anywhere;
+    }
+
+    .empty {
+      padding: 28px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        padding: 14px;
+      }
+
+      .login-card {
+        margin: 28px auto;
+        padding: 24px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat {
+        padding: 16px;
+      }
+
+      .stat strong {
+        font-size: 25px;
+      }
+
+      .topbar {
+        padding: 16px;
+      }
+
+      .topbar h1 {
+        font-size: 21px;
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      .toolbar input,
+      .toolbar select,
+      .toolbar button {
+        flex: 1 1 100%;
+        width: 100%;
+      }
     }
   </style>
 </head>
+
 <body>
   <main class="shell">
+
+    <!-- LOGIN -->
     <section id="loginPanel" class="login-card">
       <div class="brand">LoansBazaar</div>
+
       <h1>Admin Login</h1>
       <p>Sign in to manage website enquiries.</p>
 
       <form id="loginForm">
         <label for="username">Admin username</label>
-        <input id="username" name="username" autocomplete="username"
-               required maxlength="100">
+        <input
+          id="username"
+          name="username"
+          type="text"
+          autocomplete="username"
+          placeholder="Enter admin username"
+          required
+          maxlength="100"
+        >
 
         <label for="password">Admin password</label>
-        <input id="password" name="password" type="password"
-               autocomplete="current-password" required>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Enter admin password"
+          required
+        >
 
         <button id="loginButton" type="submit">Sign In</button>
-        <div id="loginMessage" class="login-message"
-             role="alert" aria-live="polite"></div>
+
+        <div
+          id="loginMessage"
+          class="login-message"
+          role="alert"
+          aria-live="polite"
+        ></div>
       </form>
     </section>
 
+    <!-- DASHBOARD -->
     <section id="dashboard" hidden>
       <header class="topbar">
         <div>
           <div class="brand">LoansBazaar</div>
           <h1>Enquiry Dashboard</h1>
         </div>
-        <button id="logoutButton" class="logout-button" type="button">
+
+        <button
+          id="logoutButton"
+          class="logout-button"
+          type="button"
+        >
           Logout
         </button>
       </header>
 
       <div class="stats">
         <div class="stat">
-          <span>Total</span>
+          <span>Total Enquiries</span>
           <strong id="total">0</strong>
         </div>
+
         <div class="stat">
           <span>Customers</span>
           <strong id="customers">0</strong>
         </div>
+
         <div class="stat">
           <span>Partners</span>
           <strong id="partners">0</strong>
         </div>
+
         <div class="stat">
           <span>Today</span>
           <strong id="today">0</strong>
@@ -102,21 +408,36 @@
 
       <section class="card">
         <div class="toolbar">
-          <input id="search"
-                 placeholder="Search name, mobile, email or service…"
-                 aria-label="Search enquiries">
+          <input
+            id="search"
+            type="search"
+            placeholder="Search name, mobile, email or service..."
+            aria-label="Search enquiries"
+          >
+
           <select id="typeFilter" aria-label="Filter enquiry type">
             <option value="">All types</option>
             <option value="Customer">Customer</option>
             <option value="Partner">Partner</option>
           </select>
+
           <button id="refreshButton" type="button">Refresh</button>
-          <button id="exportButton" class="secondary" type="button">
+
+          <button
+            id="exportButton"
+            class="secondary"
+            type="button"
+          >
             Export CSV
           </button>
         </div>
 
-        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <div
+          id="status"
+          class="status"
+          role="status"
+          aria-live="polite"
+        ></div>
 
         <div class="table-wrap">
           <table>
@@ -133,11 +454,19 @@
                 <th>Message</th>
               </tr>
             </thead>
-            <tbody id="rows"></tbody>
+
+            <tbody id="rows">
+              <tr>
+                <td colspan="9" class="empty">
+                  Sign in to load enquiries.
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </section>
     </section>
+
   </main>
 
   <script src="/admin/admin.js" defer></script>
