@@ -701,11 +701,11 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
 
     const partnerCode = await createPartnerCode(env);
 
-    // Automatically activate the partner after successful email OTP verification.
+    // OTP verifies the email, but an administrator must approve the partner.
     const created = await env.LOANSBAZAAR_DB.prepare(
       `INSERT INTO partners
        (partner_code, name, age, mobile, email, status)
-       VALUES (?, ?, ?, ?, ?, 'active')`
+       VALUES (?, ?, ?, ?, ?, 'pending')`
     ).bind(partnerCode, name, age, mobile, email).run();
 
     if (!created.success) {
@@ -720,17 +720,11 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
       "SELECT id, partner_code, name, email, status FROM partners WHERE id=?"
     ).bind(created.meta.last_row_id).first();
 
-    const exp = Math.floor(Date.now() / 1000) + SESSION_TTL;
-    const payload = b64(JSON.stringify({
-      partnerId: partner.id,
-      email: partner.email,
-      exp
-    }));
-    const sig = await sign(payload, env.EMPLOYEE_SESSION_SECRET);
-
+    // Do not issue an employee session until an administrator approves the account.
     return new Response(JSON.stringify({
       ok: true,
-      message: "Email verified and partner account created.",
+      pendingApproval: true,
+      message: "Email verified. Your partner application is awaiting administrator approval.",
       partner: {
         id: partner.id,
         partnerCode: partner.partner_code,
@@ -743,7 +737,7 @@ async function verifyEmployeeOtp(request, env, isEmployeeHost) {
         "Content-Type": "application/json",
         "Cache-Control": "no-store",
         "Set-Cookie":
-          `LB_EMPLOYEE=${payload}.${sig}; Path=/; Max-Age=${SESSION_TTL}; HttpOnly; Secure; SameSite=Lax`
+          "LB_EMPLOYEE=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"
       }
     });
   } catch (e) {
